@@ -18,10 +18,14 @@ initial_state = np.random.randn(num_nodes,1)  #  tf.zeros([num_nodes,1],
 # dtype=tf.float32)
 
 
+
+
+
+
 """
 A class used to create recurrent Neural Networks.
 """
-class RNN():
+class Other():
     def __init__( self, env ):
         self.name = 'DDPG'  # name for uploading results
         self.environment = env
@@ -74,7 +78,7 @@ def create_network( set_weights=None, set_bias=None ):
     # Randomly set the wieghts when initializing else set them to whats been given.
     if (not set_weights): set_weights = np.random.randn(num_nodes + num_outputs,
                                                         num_nodes) * 0.1
-
+    print set_weights.shape
     print('Setting weights automatically')
     # if (not set_bias):
     print('Setting bias automatically')
@@ -114,7 +118,7 @@ def create_network( set_weights=None, set_bias=None ):
 
     return _input, output, W, state
 
-with
+
 _input, output, weights, update_state = create_network()
 
 _input2, output2, weights2, update_state2 = create_network()
