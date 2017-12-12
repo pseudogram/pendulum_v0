@@ -33,7 +33,7 @@ agent = Controller(obs_dim, action_dim, nodes, dt, False)
 # ------------------------------------------------------------------------------
 POPULATION_SIZE = 40
 CROSS_PROB = 0.5
-NUM_GEN = 100  # Number of generations
+NUM_GEN = 1000  # Number of generations
 
 # ------------------------------------------------------------------------------
 #                               CREATE GA
@@ -109,8 +109,13 @@ def evaluate(individual, MAX_REWARD=0 ):
     # returns the average reward for number of episodes run
     total_reward /= EPISODES
 
-    # print(total_reward)
+    print(total_reward)
     return total_reward
+
+
+def evaluateTester(individual):
+    print(-np.sum(np.abs(individual)))
+    return [-np.sum(np.abs(individual))]
 
 
 def cross(winner, loser):
