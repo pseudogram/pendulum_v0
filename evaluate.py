@@ -5,47 +5,90 @@ import tensorflow as tf
 tf.logging.set_verbosity(tf.logging.FATAL)
 
 ENV_NAME = 'Pendulum-v0'
-EPISODES = 1  # 100000
+EPISODES = 10  # 100000
 STEPS = 200
 TEST = 100
 
+env = gym.make(ENV_NAME)
+
 
 def evaluate():
-    env = gym.make(ENV_NAME)
 
-    state_dim = env.observation_space.shape[0]
-    action_dim = env.action_space.shape[0]
+    # Create controller
+    state_dim = env.observation_space.shape[0]  # Input to controller (observ.)
+    action_dim = env.action_space.shape[0]  # Output from controller (action)
+    nodes = 6  # Unconnected nodes in network in the
+    # TODO: ASK CHRIS ABOUT dt, may need to optimize without knowing dt
+    dt = 0.05  # Time between steps in env.  may be unrelated to dt in RNN?
 
-    agent = Controller(state_dim,action_dim,nodes=6,dt=0.05)
-    agent.init_vars()
 
-    total_reward = 0;
-    for episode in xrange(EPISODES):
+
+    agent = Controller(state_dim,action_dim,nodes=nodes,dt=dt)
+
+    # agent._init_vars()
+
+    total_reward = 0
+    for episode in range(EPISODES):
+        print("Starting Episode: {}".format(episode))
+
+        # Starting observation
         observation = env.reset()
-        print "episode:", episode
-        # Train
 
+        episode_reward = 0
         next_state = np.ones([agent.state_size, 1], dtype=np.float32)
-        for step in xrange(STEPS):
-            env.render()
-            # print(observation.shape)
-            # print(type(observation))
-            # observation.reshape((3,1))
-            # observation = tf.convert_to_tensor(observation)
-            # tf.reshape(observation,[3,1])
-            # print(type(observation))
+        for step in range(STEPS):
+            # env.render()
             observation = np.reshape(observation,(3,1))
-            print(observation.shape)
+            # print(observation.shape)
             action, next_state = agent.percieve(observation, next_state)
             observation, reward, done, _ = env.step(action)
-            total_reward += reward
-            print('step',step, 'action', action, 'observation', observation)
+            episode_reward += reward
+            # print('step',step, 'action', action, 'observation', observation)
 
             if done:
                 break
 
+        print("Episode {} = {}".format(episode, episode_reward))
+        total_reward += episode_reward
+
     print(agent.get_weights().eval())
 
+    # returns the average reward for number of episodes run
+    total_reward /= EPISODES
+    return total_reward
+
+
+def test(agent):
+
+    total_reward = 0
+    for episode in range(EPISODES):
+        print("Starting Episode: {}".format(episode))
+
+        # Starting observation
+        observation = env.reset()
+
+        episode_reward = 0
+        next_state = np.ones([agent.state_size, 1], dtype=np.float32)
+        for step in range(STEPS):
+            env.render()
+            observation = np.reshape(observation,(3,1))
+            # print(observation.shape)
+            action, next_state = agent.percieve(observation, next_state)
+            print(action)
+            observation, reward, done, _ = env.step(action)
+            episode_reward += reward
+            # print('step',step, 'action', action, 'observation', observation)
+
+            if done:
+                break
+
+        # print("Episode {} = {}".format(episode, episode_reward))
+        total_reward += episode_reward
+
+    # print(agent.get_weights().eval())
+
+    # returns the average reward for number of episodes run
+    total_reward /= EPISODES
     return total_reward
 
 
@@ -69,4 +112,7 @@ def upload():
 # print 'Evaluation Average Reward:', ave_reward
 
 if __name__ == '__main__':
-    evaluate()
+    # evaluate()
+    x = 5
+    x /= 2
+    print( x )

@@ -19,6 +19,8 @@ initial_state = np.random.randn(num_nodes,
 # class D_RNN():
 #     def __init__(self):
 #         self.create_network()
+
+# TODO: set_weights method may be totally redundant as golbal variable initializer sets all weights
 def set_weights(shape, std_dev=0.1):
     """
     Returns normally distributed tensor
@@ -46,8 +48,13 @@ class Controller:
     def state_size(self):
         return self.act_space_dim + self.obs_space_dim + self.nodes
 
-    def __init__(self, obs_space_dim, act_space_dim, nodes, dt):
+    def __init__(self, obs_space_dim, act_space_dim, nodes, dt,
+                 init_weights=True):
         """
+        Randomly sets the weights of the network to normally distributed
+        values with a standard dev of 0.1.
+
+
         The size of the state = obs_space_dim + act_space_dim + nodes
 
         TODO: May need to update value of dt, not to be between calls
@@ -63,10 +70,18 @@ class Controller:
         self.obs_space_dim = obs_space_dim
         self.act_space_dim = act_space_dim
         self.nodes = nodes
-        self.weights = tf.Variable(
+        if init_weights:
+            self.weights = tf.Variable(
             set_weights([obs_space_dim + act_space_dim + nodes,
                          obs_space_dim + act_space_dim + nodes]),
-            dtype=tf.float32)
+                        dtype=tf.float32, name="node_weights",
+                        trainable=False)
+        else:
+            self.weights = tf.get_variable("node_weights",
+                                           (self.state_size, self.state_size),
+                                           dtype=tf.float32,
+                                           trainable=False)
+
         self.bias = tf.ones([obs_space_dim + act_space_dim + nodes, 1],
                             dtype=tf.float32)
         self.dt = dt
@@ -74,8 +89,11 @@ class Controller:
         x = self.make_rnn()
         self.inputs, self.state, self.output, self.next_state = x
 
-    # def __init__(self, set_weights=None, set_bias=None ):
+        # Initialize all vars
+        self._init_vars()
 
+    def get_weights(self):
+        return self.weights.eval()
 
     def make_rnn(self):
         """
@@ -111,19 +129,48 @@ class Controller:
             next_state = state + self.dt * (-state + tf.tanh(Wx_b_I))
             # print(next_state.shape)
 
-            output = next_state[-self.act_space_dim:]
+            output = tf.tanh(next_state[-self.act_space_dim:]) * 2
             # print(output.shape)
 
             return inputs, state, output, next_state
 
-    def get_weights(self):
-        return self.weights
-
-    def init_vars(self):
+    def _init_vars( self ):
         init = tf.global_variables_initializer()
         self.sess.run(init)
 
+    def get_weights(self):
+        """ Returns the weights of the controller unrolled into a single
+        dimension.
+
+        Length of the array = (obs_space_dim + act_space_dim + nodes)^2
+        Length of the array = state_size^2
+
+        :return: numpy.ndarray
+        """
+        return self.weights.eval()
+
+    def set_weights(self,weights):
+        """ Set the weights of the controller
+        :param weights: A single array of length state_size^2
+        :return:
+        """
+        if weights.shape != (self.state_size,self.state_size) and \
+            weights.shape != (self.state_size**2,):
+            raise RuntimeError('Shape of weights given not correct shape. '
+                               'Given {} , expecting {} or {}'.format(
+                weights.shape, (self.state_size,self.state_size),
+                (self.state_size**2)
+            ))
+
+        x = np.reshape(weights,(self.state_size,self.state_size))
+        set_w = self.weights.assign(x)
+        self.sess.run(set_w)
+
     def percieve(self, obs, _state):
+        """Pass an observation from the environment and the last state
+        If it is the first call, randomly generate a state of of shape
+        (state_size, 1)
+        """
         action, _next_state = self.sess.run([self.output, self.next_state],
                                             feed_dict={self.inputs: obs,
                                                        self.state: _state})
@@ -131,15 +178,29 @@ class Controller:
 
 
 if __name__ == '__main__':
-    c = Controller(3, 1, 1, 0.05)
-    c.init_vars()
-    # inputs, state, outputs, next_state = c.make_rnn()
-    num_epochs = 100
+    # --------------------------------------------------------------------------
+    #                       All code below used for testing
+    # --------------------------------------------------------------------------
 
-    out_list = list()
-    _in = np.zeros([num_inputs, 1], dtype=np.float32)
-    _next_state = np.ones([c.state_size, 1], dtype=np.float32)
-    for epoch in range(num_epochs):
-        _, _next_state = c.percieve(_in,_next_state)
-        out_list.append(_)
-    pprint(out_list)
+    print(np.random.rand())
+
+    c = Controller(3, 1, 1, 0.05,False)
+    x = c.get_weights()
+    # print(x)
+    # print(type(x))
+    # print(np.reshape(x,-1))
+
+    print(x)
+    c.set_weights(np.ones((5,5),dtype=np.float32))
+    print(c.get_weights())
+
+    # # inputs, state, outputs, next_state = c.make_rnn()
+    # num_epochs = 100
+    #
+    # out_list = list()
+    # _in = np.zeros([num_inputs, 1], dtype=np.float32)
+    # _next_state = np.ones([c.state_size, 1], dtype=np.float32)
+    # for epoch in range(num_epochs):
+    #     _, _next_state = c.percieve(_in,_next_state)
+    #     out_list.append(_)
+    # pprint(out_list)
