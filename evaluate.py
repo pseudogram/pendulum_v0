@@ -1,5 +1,6 @@
 import numpy as np
-from new_rnn import Controller
+from rnn import Basic_rnn
+from rnn import FullyConnectedRNN
 import gym
 import tensorflow as tf
 tf.logging.set_verbosity(tf.logging.FATAL)
@@ -23,7 +24,8 @@ def evaluate():
 
 
 
-    agent = Controller(state_dim,action_dim,nodes=nodes,dt=dt)
+    agent = Basic_rnn(state_dim, action_dim, nodes=nodes, dt=dt)
+    # agent = FullyConnectedRNN(state_dim, action_dim, nodes)
 
     # agent._init_vars()
 
@@ -62,6 +64,7 @@ def test(agent):
 
     total_reward = 0
     for episode in range(EPISODES):
+        print()
         print("Starting Episode: {}".format(episode))
 
         # Starting observation
@@ -72,9 +75,11 @@ def test(agent):
         for step in range(STEPS):
             env.render()
             observation = np.reshape(observation,(3,1))
-            # print(observation.shape)
+            print('observation\t\t{}'.format(observation))
             action, next_state = agent.percieve(observation, next_state)
-            print(action)
+            print('Action\t\t{}'.format(action))
+            print('Next State\t\t{}'.format(next_state))
+            print()
             observation, reward, done, _ = env.step(action)
             episode_reward += reward
             # print('step',step, 'action', action, 'observation', observation)
@@ -89,6 +94,7 @@ def test(agent):
 
     # returns the average reward for number of episodes run
     total_reward /= EPISODES
+    print('Average Total Reward\t\t=\t\t{}'.format(total_reward))
     return total_reward
 
 

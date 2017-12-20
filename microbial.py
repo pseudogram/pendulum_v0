@@ -4,7 +4,7 @@ from deap import tools
 import numpy as np
 import random
 import gym
-from new_rnn import Controller
+from rnn import Basic_rnn, FullyConnectedRNN
 from pprint import pprint
 
 # ------------------------------------------------------------------------------
@@ -12,7 +12,7 @@ from pprint import pprint
 # ------------------------------------------------------------------------------
 
 ENV_NAME = 'Pendulum-v0'
-EPISODES = 1  # Number of times to run envionrment when evaluating
+EPISODES = 3  # Number of times to run envionrment when evaluating
 STEPS = 200  # Max number of steps to run run simulation
 
 env = gym.make(ENV_NAME)
@@ -21,12 +21,14 @@ env = gym.make(ENV_NAME)
 obs_dim = env.observation_space.shape[0]  # Input to controller (observ.)
 action_dim = env.action_space.shape[0]  # Output from controller (action)
 nodes = 1  # Unconnected nodes in network in the
-dt = 0.05  # dt for the environment, found in environment source code
+# dt = 0.05  # dt for the environment, found in environment source code
+dt = 1 # Works the best, 0.05 causes it to vanish
 
 # ------------------------------------------------------------------------------
-#                          SET UP: TensorFlow Controller
+#                          SET UP: TensorFlow Basic_rnn
 # ------------------------------------------------------------------------------
-agent = Controller(obs_dim, action_dim, nodes, dt, False)
+# agent = Basic_rnn(obs_dim, action_dim, nodes, dt, False)
+agent = FullyConnectedRNN(obs_dim, action_dim, nodes)
 
 # ------------------------------------------------------------------------------
 #                               SET UP GA PARAMETERS
@@ -34,6 +36,7 @@ agent = Controller(obs_dim, action_dim, nodes, dt, False)
 POPULATION_SIZE = 40
 CROSS_PROB = 0.5
 NUM_GEN = 1000  # Number of generations
+DEME_SIZE = 3  # from either side
 
 # ------------------------------------------------------------------------------
 #                               CREATE GA
@@ -56,7 +59,7 @@ toolbox = base.Toolbox()
 
 # Create a function 'attr_item' to return the 'ID' of one item
 # num_nodes = num_inputs+1 = 20
-NUM_PARAMS = agent.state_size ** 2
+NUM_PARAMS = agent.num_params
 
 # create a function 'individual'. It takes an individual and instantiates
 #   it with a numpy array of size, NUM_PARAMS and type float32
@@ -88,7 +91,8 @@ def evaluate(individual, MAX_REWARD=0 ):
         observation = env.reset()
 
         episode_reward = 0
-        next_state = np.ones([agent.state_size, 1], dtype=np.float32)
+        next_state = np.random.rand(agent.state_size, 1).astype(
+            dtype=np.float32)
         for step in range(STEPS):
             # env.render()
             observation = np.reshape(observation,(3,1))
@@ -131,19 +135,41 @@ def cross(winner, loser):
             loser[i] = winner[i]
     return loser
 
+
 def mutate(individual):
     """Adds or subtracts 1% with a chance of 1/NUM_PARAMS"""
     # TODO: Increase speed of mutation
     for i in range(NUM_PARAMS):
         if np.random.rand() < (1/NUM_PARAMS):
-            individual[i] += individual[i] * (np.random.rand()-0.5)*0.2
+            individual[i] += individual[i] * (np.random.rand()-0.5)*0.01
     return individual
 
 toolbox.register("evaluate", evaluate)
 toolbox.register("crossover", cross)
 toolbox.register("mutate", mutate)
 # TODO: create function to select 2 indiviuals within close proximity
-toolbox.register("select", tools.selRandom, k=2)
+
+
+def selDeme(individuals, deme_size):
+    """Select *k* individuals at random from the input *individuals* with
+    replacement. The list returned contains references to the input
+    *individuals*.
+
+    :param individuals: A list of individuals to select from.
+    :param k: The number of individuals to select.
+    :returns: A list of selected individuals.
+
+    This function uses the :func:`~random.choice` function from the
+    python base :mod:`random` module.
+    """
+    one = np.random.randint(POPULATION_SIZE)
+    _next = np.random.randint(1, deme_size + 1)
+    if np.random.rand() < 0.5: _next = -_next
+    two = (one + _next) % POPULATION_SIZE
+    return individuals[one], individuals[two]
+
+# toolbox.register("select", tools.selRandom, k=2)
+toolbox.register("select", selDeme, deme_size=DEME_SIZE)
 
 
 
@@ -236,17 +262,17 @@ def main():
 
 if __name__ == "__main__":
     pop, logbook, hof = main()
-    pprint(logbook)
-
-    # Best controller
-    print(hof.items[0])
+    # pprint(logbook)
+    #
+    # # Best controller
+    # print(hof.items[0])
 
     # Save best as CSV
     # For some reason saves under _practice package
-    np.savetxt("./bestController.csv", hof.items[0], delimiter=",")
+    np.savetxt("./bestController_fully_5nodes.csv", hof.items[0], delimiter=",")
     agent.set_weights(hof.items[0])
 
-    # agent.set_weights(np.loadtxt("./bestController.csv", delimiter=","))
+    # agent.set_weights(np.loadtxt("./bestController1.csv", delimiter=","))
 
 
     from evaluate import test
