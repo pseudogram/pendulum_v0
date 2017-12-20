@@ -20,7 +20,7 @@ env = gym.make(ENV_NAME)
 # Used to create controller
 obs_dim = env.observation_space.shape[0]  # Input to controller (observ.)
 action_dim = env.action_space.shape[0]  # Output from controller (action)
-nodes = 1  # Unconnected nodes in network in the
+nodes = 3  # Unconnected nodes in network in the
 # dt = 0.05  # dt for the environment, found in environment source code
 dt = 1 # Works the best, 0.05 causes it to vanish
 
@@ -65,7 +65,7 @@ NUM_PARAMS = agent.num_params
 #   it with a numpy array of size, NUM_PARAMS and type float32
 # Set the weights to a value n where, -0.1 < n < 0.1
 toolbox.register("attr_floats", lambda n: (np.random.rand(n).astype(
-    np.float32)-0.5)*0.1, NUM_PARAMS)
+    np.float32)-0.5)*2, NUM_PARAMS)
 
 toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.attr_floats)
 
