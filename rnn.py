@@ -130,7 +130,7 @@ class Basic_rnn:
             next_state = state + self.dt * (-state + tf.tanh(Wx_b_I))
             # print(next_state.shape)
 
-            output = tf.tanh(next_state[-self.act_space_dim:]) * 3
+            output = tf.tanh(next_state[-self.act_space_dim:]) * 2
             # print(output.shape)
 
             return inputs, state, output, next_state
@@ -239,7 +239,7 @@ class FullyConnectedRNN:
         """
         # Todo: may need to make the placeholder shape [obs_space_dim, 1]
 
-        with tf.name_scope('rnn'):
+        with tf.variable_scope('rnn'):
             # ----------------------------------------------------------------------
             #                               Inputs
             # ----------------------------------------------------------------------

@@ -20,7 +20,7 @@ env = gym.make(ENV_NAME)
 # Used to create controller
 obs_dim = env.observation_space.shape[0]  # Input to controller (observ.)
 action_dim = env.action_space.shape[0]  # Output from controller (action)
-nodes = 3  # Unconnected nodes in network in the
+nodes = 10  # Unconnected nodes in network in the
 # dt = 0.05  # dt for the environment, found in environment source code
 dt = 1 # Works the best, 0.05 causes it to vanish
 
@@ -35,7 +35,7 @@ agent = FullyConnectedRNN(obs_dim, action_dim, nodes)
 # ------------------------------------------------------------------------------
 POPULATION_SIZE = 40
 CROSS_PROB = 0.5
-NUM_GEN = 1000  # Number of generations
+NUM_GEN = 2000   # Number of generations
 DEME_SIZE = 3  # from either side
 
 # ------------------------------------------------------------------------------
@@ -261,7 +261,7 @@ def main():
     return pop, logbook, hof
 
 if __name__ == "__main__":
-    pop, logbook, hof = main()
+    # pop, logbook, hof = main()
     # pprint(logbook)
     #
     # # Best controller
@@ -269,10 +269,13 @@ if __name__ == "__main__":
 
     # Save best as CSV
     # For some reason saves under _practice package
-    np.savetxt("./bestController_fully_5nodes.csv", hof.items[0], delimiter=",")
-    agent.set_weights(hof.items[0])
+    # np.savetxt("./bestController_fully_10nodes2000.csv", hof.items[0],
+    #            delimiter=",")
+    # agent.set_weights(hof.items[0])
+    # np.savetxt("./bestController_bu.csv", hof.items[0], delimiter=",")
+    # agent.set_weights(hof.items[0])
 
-    # agent.set_weights(np.loadtxt("./bestController1.csv", delimiter=","))
+    agent.set_weights(np.loadtxt("./bestController_fully_10nodes2000.csv", delimiter=","))
 
 
     from evaluate import test
