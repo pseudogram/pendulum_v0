@@ -239,45 +239,45 @@ class FullyConnectedRNN:
         """
         # Todo: may need to make the placeholder shape [obs_space_dim, 1]
 
-        with tf.variable_scope('rnn'):
-            # ----------------------------------------------------------------------
-            #                               Inputs
-            # ----------------------------------------------------------------------
-            x = tf.placeholder(tf.float32, (self.input_size, 1),
-                               'observation')
-            W_hx = tf.get_variable("W_hx",
-                                 (self.state_size, self.input_size),
-                                 dtype=tf.float32, trainable=False)
+        # with tf.variable_scope('rnn'):
+        # ----------------------------------------------------------------------
+        #                               Inputs
+        # ----------------------------------------------------------------------
+        x = tf.placeholder(tf.float32, (self.input_size, 1),
+                           'observation')
+        W_hx = tf.get_variable("W_hx",
+                             (self.state_size, self.input_size),
+                             dtype=tf.float32, trainable=False)
 
-            # ----------------------------------------------------------------------
-            #                         previous state
-            # ----------------------------------------------------------------------
-            h_t = tf.placeholder(tf.float32, [self.state_size, 1],
-                                 'previous_state')
-            W_hh = tf.get_variable("W_hh", [self.state_size, self.state_size],
-                                   dtype=tf.float32, trainable=False)
+        # ----------------------------------------------------------------------
+        #                         previous state
+        # ----------------------------------------------------------------------
+        h_t = tf.placeholder(tf.float32, [self.state_size, 1],
+                             'previous_state')
+        W_hh = tf.get_variable("W_hh", [self.state_size, self.state_size],
+                               dtype=tf.float32, trainable=False)
 
-            # ----------------------------------------------------------------------
-            #                               State
-            # ----------------------------------------------------------------------
-            # Hidden bias
-            b_h = tf.zeros([self.nodes, 1], dtype=tf.float32)
-            # Hidden state
-            h_t1 = tf.tanh(tf.matmul(W_hx, x,name='inputs') + tf.matmul(W_hh,
-                                                                       h_t,
-                                                          name='hidden') + b_h)
+        # ----------------------------------------------------------------------
+        #                               State
+        # ----------------------------------------------------------------------
+        # Hidden bias
+        b_h = tf.zeros([self.nodes, 1], dtype=tf.float32)
+        # Hidden state
+        h_t1 = tf.tanh(tf.matmul(W_hx, x,name='inputs') + tf.matmul(W_hh,
+                                                                   h_t,
+                                                      name='hidden') + b_h)
 
-            # ----------------------------------------------------------------------
-            #                              Output
-            # ----------------------------------------------------------------------
-            W_yh = tf.get_variable("W_yh", (self.output_size, self.state_size),
-                                   dtype=tf.float32, trainable=False)
-            b_y = tf.zeros([self.output_size, 1], dtype=tf.float32)
-            y = tf.tanh(tf.matmul(W_yh, h_t1, name='output') + b_y) * 2
+        # ----------------------------------------------------------------------
+        #                              Output
+        # ----------------------------------------------------------------------
+        W_yh = tf.get_variable("W_yh", (self.output_size, self.state_size),
+                               dtype=tf.float32, trainable=False)
+        b_y = tf.zeros([self.output_size, 1], dtype=tf.float32)
+        y = tf.tanh(tf.matmul(W_yh, h_t1, name='output') + b_y) * 2
 
-            # input, prev state, output, next state, input_weights, hidden_weights,
-            # out_weights
-            return x, h_t, y, h_t1, W_hx, W_hh, W_yh
+        # input, prev state, output, next state, input_weights, hidden_weights,
+        # out_weights
+        return x, h_t, y, h_t1, W_hx, W_hh, W_yh
 
     def _init_vars(self):
         init = tf.global_variables_initializer()
